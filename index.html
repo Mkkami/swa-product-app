@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+    <style>
+        
+form {
+    display: flex;
+    flex-direction: column;
+    /* justify-content: center; */
+    align-items: center;
+    margin-top: 5em;
+    gap: 1em;
+}
+
+input[type="text"], input[type="email"], input[type="password"] {
+    width: 300px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+input[type="number"] {
+    width: 300px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+button[type="submit"] {
+    width: 150px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+label {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+}
+
+.product-list {
+    margin-top: 2em;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+table, th, td {
+    border: 1px solid gray;
+    border-collapse: collapse;
+}
+
+tr:nth-child(even) {
+    background-color: rgb(216, 215, 215);
+}
+
+th {
+    background-color: #ccc;
+    padding: 10px;
+}
+
+.product-item {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    width: 200px;
+    text-align: center;
+}
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <form id="productForm">
+            <div>
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name">
+            </div>
+            <div>
+                <label for="price">Price</label>
+                <input type="number" id="price" name="price" step="0.01">
+            </div>
+            <button type="submit" id="submitButton">Add Product</button>
+        </form>
+    </div>
+    <div class="product-list">
+        <button id="refreshButton">Refresh</button>
+        <h1>Products</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <p id="listStatus"></p>
+            <tbody id="productsTable">
+                <!-- Products will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+
+const CREATE_PRODUCT_URL = `api/CreateProduct`;
+const GET_PRODUCTS_URL = `api/GetProducts`;
+
+const form = document.getElementById('productForm');
+const submitButton = document.getElementById('submitButton');
+const productsTable = document.getElementById('productsTable');
+const listStatus = document.getElementById('listStatus');
+const refreshButton = document.getElementById('refreshButton');
+
+async function fetchProducts() {
+    productsTable.innerHTML = '';
+    listStatus.innerText = 'Loading products...';
+
+    try {
+        const response = await fetch(GET_PRODUCTS_URL, { method: 'GET' });
+
+        if (response.status === 404) {
+            listStatus.innerText = 'No products found.';
+            return;
+        }
+
+        if (!response.ok) {
+            listStatus.innerText = 'Error fetching products.';
+            return;   
+        }
+
+        const products = await response.json();
+
+        console.log(products)
+
+        if (products.length === 0 || !Array.isArray(products)) {
+            listStatus.innerText = 'No products available.';
+            return;
+        } else {
+            listStatus.innerText = '';
+            products.forEach(product => {
+                const row = productsTable.insertRow();
+                const idText = product.id ? product.id.substring(0, 8) : '';
+                // row.insertCell(0).innerText = product.id;
+                row.insertCell(0).innerText = product.name;
+                row.insertCell(1).innerText = product.price;
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        listStatus.innerText = 'Error fetching products.';
+    }
+}
+
+form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    submitButton.disabled = true;
+    const formData = new FormData(form);
+    const productData = {
+        Name: formData.get('name'),
+        Price: parseFloat(formData.get('price'))
+    };
+
+    console.log(JSON.stringify(productData))
+
+    try {
+        const response = await fetch(CREATE_PRODUCT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(productData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Error creating product');
+        }
+
+        alert('Product created successfully!');
+        form.reset();
+    } catch (error) {
+        console.error('Error creating product:', error);
+        alert('Error creating product: ' + error.message);
+    } finally {
+        submitButton.disabled = false;
+    }
+});
+
+refreshButton.addEventListener('click', fetchProducts);
+    </script>
+</body>
+</html>
