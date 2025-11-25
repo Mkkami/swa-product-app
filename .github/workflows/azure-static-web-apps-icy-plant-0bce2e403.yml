@@ -32,6 +32,13 @@ jobs:
                const coredemo = require('@actions/core')
                return await coredemo.getIDToken()
            result-encoding: string
+      - name: Inject API URL
+        run: |
+          # Use 'sed' to replace the placeholder in index.html with the actual value of the environment variable
+          sed -i 's|__API_BASE_URL_PLACEHOLDER__|${{ env.API_BASE_URL }}|g' index.html
+        env:
+          # IMPORTANT: You must reference the variable you created in the Azure Portal here
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1

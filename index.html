@@ -118,9 +118,10 @@ th {
     </div>
 
     <script>
+const API_BASE_URL = '__API_BASE_URL_PLACEHOLDER__';
 
-const CREATE_PRODUCT_URL = `api/CreateProduct`;
-const GET_PRODUCTS_URL = `api/GetProducts`;
+const CREATE_PRODUCT_URL = `${API_BASE_URL}/api/CreateProduct`;
+const GET_PRODUCTS_URL = `${API_BASE_URL}/api/GetProducts`;
 
 const form = document.getElementById('productForm');
 const submitButton = document.getElementById('submitButton');
